@@ -117,7 +117,6 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#020617] text-slate-200 selection:bg-violet-500/30 overflow-x-hidden">
-      {/* Header */}
       <header className="px-8 py-6 border-b border-white/5 flex items-center justify-between sticky top-0 z-50 bg-[#020617]/80 backdrop-blur-2xl">
         <div className="flex items-center space-x-3 group cursor-pointer" onClick={() => window.location.href = window.location.origin + window.location.pathname}>
           <div className="w-12 h-12 bg-gradient-to-tr from-violet-600 via-fuchsia-500 to-rose-400 rounded-2xl flex items-center justify-center shadow-2xl shadow-violet-500/20 group-hover:rotate-6 transition-all duration-500 relative">
@@ -140,8 +139,6 @@ const App: React.FC = () => {
           </div>
         </div>
         <div className="hidden lg:flex items-center space-x-10 text-[11px] font-bold uppercase tracking-widest text-slate-500">
-          <span className="hover:text-white cursor-pointer transition-colors">Framework</span>
-          <span className="hover:text-white cursor-pointer transition-colors">Engine Specs</span>
           <button 
             onClick={handleShareApp}
             className={`px-6 py-3 rounded-2xl border transition-all active:scale-95 flex items-center space-x-2 
@@ -150,7 +147,7 @@ const App: React.FC = () => {
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
             </svg>
-            <span>{appCopyFeedback ? 'App Link Copied' : 'Share App'}</span>
+            <span>{appCopyFeedback ? 'Link Copied' : 'Share App'}</span>
           </button>
           <button className="bg-white/5 hover:bg-white/10 text-white px-6 py-3 rounded-2xl border border-white/10 transition-all active:scale-95">
             License Portal
@@ -160,7 +157,6 @@ const App: React.FC = () => {
 
       <main className="max-w-7xl mx-auto px-6 py-12 lg:py-20 relative">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 relative z-10">
-          {/* Left Column */}
           <div className="lg:col-span-4 space-y-10 fade-in-up">
             <div className="space-y-6">
               <div className="inline-flex items-center px-4 py-2 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-400 text-[10px] font-black uppercase tracking-widest">
@@ -174,9 +170,7 @@ const App: React.FC = () => {
                 Our neural architecture parses your brand directives to engineer bespoke digital identities in seconds.
               </p>
             </div>
-
             <ThemeForm onGenerate={handleGenerate} isLoading={themeState.loading} />
-            
             {themeState.error && (
               <div className="p-5 bg-red-500/5 border border-red-500/20 rounded-3xl text-red-400 text-xs font-bold uppercase tracking-widest flex items-center space-x-3">
                 <div className="w-2 h-2 bg-red-500 rounded-full animate-ping"></div>
@@ -185,7 +179,6 @@ const App: React.FC = () => {
             )}
           </div>
 
-          {/* Right Column */}
           <div className="lg:col-span-8">
             {!themeState.data && !themeState.loading ? (
               <div className="h-full min-h-[600px] glass-card rounded-[3rem] border border-white/5 flex flex-col items-center justify-center text-slate-600 p-16 text-center group hover:border-violet-500/20 transition-all duration-1000">
@@ -232,32 +225,20 @@ const App: React.FC = () => {
                           </svg>
                           <span>System Export</span>
                         </button>
-                        <button className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 px-8 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest text-white transition-all shadow-xl shadow-violet-500/20 active:scale-95">
-                          Deploy Theme
-                        </button>
                       </div>
                     </div>
-                    
-                    <PreviewFrame 
-                      theme={themeState.data} 
-                      heroImage={themeState.heroImageUrl} 
-                    />
-                    
+                    <PreviewFrame theme={themeState.data} heroImage={themeState.heroImageUrl} />
                     <div className="fade-in-up stagger-2">
                       <ThemeSpecs theme={themeState.data} />
                     </div>
                   </>
                 )}
-                
                 {themeState.loading && (
                    <div className="h-full min-h-[600px] glass-card rounded-[3rem] flex flex-col items-center justify-center space-y-10 fade-in-up relative overflow-hidden">
-                      {/* Scanning visual overlay */}
                       <div className="absolute inset-0 scan-line pointer-events-none opacity-20"></div>
-                      
                       <div className="relative">
                         <div className="w-40 h-40 border-4 border-violet-500/5 rounded-[2.5rem] animate-pulse"></div>
                         <div className="absolute inset-0 w-40 h-40 border-t-4 border-violet-500 rounded-[2.5rem] animate-spin"></div>
-                        <div className="absolute inset-6 border-2 border-fuchsia-500/10 rounded-[1.5rem] animate-reverse-spin" style={{ animation: 'spin 4s linear infinite reverse' }}></div>
                         <div className="absolute inset-0 flex items-center justify-center">
                             <div className="w-4 h-4 bg-violet-500 rounded-full animate-ping"></div>
                         </div>
@@ -276,7 +257,26 @@ const App: React.FC = () => {
             )}
           </div>
         </div>
-
-        {/* Brand floating elements */}
         <div className="absolute -top-40 -left-40 w-80 h-80 bg-violet-600/5 blur-[100px] rounded-full animate-float"></div>
-        <div className="absolute top-1/2 -right-40 w-60 h-60 bg-rose-600/5 blur-[
+        <div className="absolute top-1/2 -right-40 w-60 h-60 bg-rose-600/5 blur-[80px] rounded-full"></div>
+      </main>
+
+      <footer className="py-20 px-10 border-t border-white/5 bg-[#020617] mt-20">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center opacity-30">
+          <div className="flex items-center space-x-3 mb-8 md:mb-0">
+            <div className="w-8 h-8 bg-slate-800 rounded-lg"></div>
+            <span className="text-sm font-black tracking-widest uppercase">Thematic System v3.4.0</span>
+          </div>
+          <div className="flex space-x-12 text-[10px] font-black uppercase tracking-[0.2em]">
+            <span className="hover:text-white cursor-pointer transition-colors" onClick={handleShareApp}>Get App Link</span>
+            <span className="hover:text-white cursor-pointer transition-colors">Neural Docs</span>
+            <span className="hover:text-white cursor-pointer transition-colors">Safety Protocols</span>
+            <span className="hover:text-white cursor-pointer transition-colors">API Access</span>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+};
+
+export default App;
