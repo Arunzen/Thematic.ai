@@ -6,29 +6,52 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thematic.ai | Intelligent Theme Engineering</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --accent-primary: #8b5cf6;
-            --accent-secondary: #ec4899;
-            --bg-obsidian: #020617;
+            --accent-primary: #FFCACC;
+            --accent-secondary: #DBC4F0;
+            --accent-highlight: #FAF3F0;
+            --bg-obsidian: #0a0505;
+            --text-main: #f8fafc;
+            --card-bg: rgba(26, 10, 10, 0.4);
+            --border-color: rgba(255, 202, 204, 0.2); /* Tinted with #FFCACC */
         }
+
+        .light {
+            --bg-obsidian: #FAF3F0;
+            --text-main: #0f172a;
+            --card-bg: rgba(212, 226, 212, 0.4); /* Tinted with #D4E2D4 */
+            --border-color: rgba(219, 196, 240, 0.4); /* Tinted with #DBC4F0 */
+        }
+
         body {
             font-family: 'Inter', sans-serif;
             background-color: var(--bg-obsidian);
-            color: #f8fafc;
+            color: var(--text-main);
+            overflow-x: hidden;
+            cursor: none;
+            transition: background-color 0.5s ease, color 0.5s ease;
         }
+
         .font-heading {
             font-family: 'Plus Jakarta Sans', sans-serif;
         }
+
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
         ::-webkit-scrollbar {
             width: 8px;
         }
+
         ::-webkit-scrollbar-track {
-            background: #0f172a;
+            background: #1a0a0a;
         }
+
         ::-webkit-scrollbar-thumb {
-            background: #334155;
+            background: var(--accent-primary);
             border-radius: 10px;
         }
         
@@ -55,19 +78,70 @@
         }
 
         .glass-card {
-            background: rgba(30, 41, 59, 0.4);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            transition: border-color 0.4s ease, transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), background-color 0.5s ease;
         }
         
-        @keyframes float {
-            0% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-20px) rotate(5deg); }
-            100% { transform: translateY(0px) rotate(0deg); }
+        .ambient-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+            pointer-events: none;
+            background: var(--bg-obsidian);
+            transition: background-color 0.5s ease;
         }
-        
-        .animate-float {
-            animation: float 8s ease-in-out infinite;
+
+        .hue-blob {
+            position: absolute;
+            width: 60vw;
+            height: 60vw;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.15;
+            transition: all 1s ease;
+        }
+
+        .hue-1 {
+            background: radial-gradient(circle, var(--accent-primary), transparent 70%);
+            top: -20%;
+            right: -10%;
+        }
+
+        .neural-cursor {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--accent-primary);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            mix-blend-mode: difference;
+            transition: transform 0.1s ease-out, width 0.3s ease, height 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .neural-cursor-dot {
+            width: 4px;
+            height: 4px;
+            background-color: var(--accent-primary);
+            border-radius: 50%;
+        }
+        .neural-cursor.active {
+            transform: scale(3.5);
+            background: rgba(255, 202, 204, 0.1);
+        }
+
+        @media (max-width: 768px) {
+            .neural-cursor { display: none; }
+            body { cursor: auto; }
         }
     </style>
 <script type="importmap">
@@ -81,7 +155,31 @@
 }
 </script>
 </head>
-<body>
+<body class="dark">
+    <div class="neural-cursor" id="cursor">
+        <div class="neural-cursor-dot"></div>
+    </div>
+    <div class="ambient-bg">
+        <div class="hue-blob hue-1" id="blob-1"></div>
+    </div>
     <div id="root"></div>
+
+    <script>
+        const cursor = document.getElementById('cursor');
+        let mouseX = window.innerWidth / 2;
+        let mouseY = window.innerHeight / 2;
+
+        document.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+            if (cursor) {
+                cursor.style.left = mouseX - 10 + 'px';
+                cursor.style.top = mouseY - 10 + 'px';
+            }
+        });
+
+        document.addEventListener('mousedown', () => cursor?.classList.add('active'));
+        document.addEventListener('mouseup', () => cursor?.classList.remove('active'));
+    </script>
 </body>
 </html>

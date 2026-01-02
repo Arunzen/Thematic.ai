@@ -1,73 +1,91 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { WebsiteTheme } from '../types';
 
 interface ThemeSpecsProps {
   theme: WebsiteTheme;
+  isDarkMode: boolean;
 }
 
-const ThemeSpecs: React.FC<ThemeSpecsProps> = ({ theme }) => {
+const ThemeSpecs: React.FC<ThemeSpecsProps> = ({ theme, isDarkMode }) => {
+  const [copiedColor, setCopiedColor] = useState<string | null>(null);
+
+  const copyToClipboard = (hex: string) => {
+    navigator.clipboard.writeText(hex);
+    setCopiedColor(hex);
+    setTimeout(() => setCopiedColor(null), 2000);
+  };
+
   return (
-    <div className="bg-slate-800/30 rounded-3xl border border-slate-700/50 p-8 backdrop-blur-sm transition-all hover:border-slate-600/50">
-      <div className="flex items-center justify-between mb-8">
-        <h3 className="text-xl font-bold font-heading tracking-tight">Brand Identity Token</h3>
-        <div className="text-[10px] text-slate-500 font-mono bg-slate-900 px-3 py-1 rounded-full border border-slate-800">V1.0.0-STABLE</div>
+    <div className={`rounded-3xl border p-8 backdrop-blur-xl transition-all hover:border-white/10 group ${isDarkMode ? 'bg-slate-800/20 border-white/5' : 'bg-white/80 border-slate-200'}`}>
+      <div className="flex items-center justify-between mb-10">
+        <div>
+           <h3 className={`text-2xl font-black font-heading tracking-tight mb-1 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Neural Specification</h3>
+           <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Calculated Brand DNA</p>
+        </div>
+        <div className="text-[10px] text-violet-400 font-mono bg-violet-500/5 px-4 py-2 rounded-xl border border-violet-500/20 animate-pulse uppercase font-black">
+           READY
+        </div>
       </div>
       
-      <div className="space-y-8">
+      <div className="space-y-10">
         {/* Colors */}
         <div>
-          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] block mb-4">Master Color Palette</label>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            {/* Fixed error: explicitly cast entries to ensure name and hex are strings, avoiding 'unknown' type issues in strict TS */}
+          <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] block mb-6 ml-1">Color Substrate</label>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {(Object.entries(theme.colors) as [string, string][]).map(([name, hex], idx) => (
-              <div 
+              <button 
                 key={name} 
-                className="group relative flex items-center space-x-4 bg-slate-900/40 p-3 rounded-2xl border border-transparent hover:border-slate-700/50 transition-all hover:bg-slate-900/60 fade-in-up"
-                style={{ animationDelay: `${idx * 0.1}s` }}
+                onClick={() => copyToClipboard(hex)}
+                className={`group relative flex items-center space-x-4 p-3 rounded-2xl border transition-all text-left overflow-hidden active:scale-95 ${isDarkMode ? 'bg-slate-900/40 border-white/5 hover:border-white/20 hover:bg-slate-900/60' : 'bg-slate-100 border-slate-200 hover:border-slate-300 hover:bg-slate-200'}`}
               >
                 <div 
-                  className="w-12 h-12 rounded-xl shadow-lg transition-transform group-hover:scale-110 flex-shrink-0" 
-                  style={{ backgroundColor: hex, boxShadow: `0 10px 15px -3px ${hex}33` }}
-                ></div>
-                <div className="overflow-hidden">
-                  <div className="text-[10px] text-slate-500 font-black uppercase truncate">{name}</div>
-                  <div className="text-xs font-mono text-slate-300 font-medium">{hex.toUpperCase()}</div>
+                  className="w-12 h-12 rounded-xl shadow-lg transition-transform group-hover:scale-110 flex-shrink-0 relative overflow-hidden" 
+                  style={{ backgroundColor: hex }}
+                >
+                  {copiedColor === hex && (
+                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-[8px] font-black text-white uppercase tracking-tighter animate-in fade-in zoom-in">
+                       COPIED
+                    </div>
+                  )}
                 </div>
-              </div>
+                <div className="overflow-hidden">
+                  <div className={`text-[10px] font-black uppercase truncate transition-colors ${isDarkMode ? 'text-slate-500 group-hover:text-slate-300' : 'text-slate-400 group-hover:text-slate-600'}`}>{name}</div>
+                  <div className={`text-xs font-mono font-bold transition-colors ${isDarkMode ? 'text-slate-300 group-hover:text-white' : 'text-slate-800'}`}>{hex.toUpperCase()}</div>
+                </div>
+                <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              </button>
             ))}
           </div>
         </div>
 
         {/* Typography */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <div className="bg-slate-900/40 p-6 rounded-2xl border border-slate-800/50 hover:border-slate-700/50 transition-colors fade-in-up stagger-2">
-            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] block mb-3">Heading Typography</label>
-            <div className="text-2xl font-bold tracking-tight" style={{ fontFamily: theme.typography.headingFont }}>{theme.typography.headingFont}</div>
-            <div className="mt-2 text-[10px] text-slate-600 font-mono">Aa Bb Cc Dd Ee Ff 123</div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className={`p-6 rounded-3xl border transition-all group/type ${isDarkMode ? 'bg-slate-900/40 border-white/5 hover:border-violet-500/20' : 'bg-slate-100 border-slate-200 hover:border-violet-500/20'}`}>
+            <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] block mb-4">Header Token</label>
+            <div className={`text-3xl font-black tracking-tighter mb-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`} style={{ fontFamily: theme.typography.headingFont }}>{theme.typography.headingFont}</div>
+            <div className="text-[10px] text-slate-600 font-mono tracking-widest uppercase">Weight: Black • Subset: Latin</div>
           </div>
-          <div className="bg-slate-900/40 p-6 rounded-2xl border border-slate-800/50 hover:border-slate-700/50 transition-colors fade-in-up stagger-3">
-            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] block mb-3">Body Typography</label>
-            <div className="text-2xl tracking-tight" style={{ fontFamily: theme.typography.bodyFont }}>{theme.typography.bodyFont}</div>
-            <div className="mt-2 text-[10px] text-slate-600 font-mono">The quick brown fox jumps over the lazy dog.</div>
+          <div className={`p-6 rounded-3xl border transition-all group/type ${isDarkMode ? 'bg-slate-900/40 border-white/5 hover:border-fuchsia-500/20' : 'bg-slate-100 border-slate-200 hover:border-fuchsia-500/20'}`}>
+            <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] block mb-4">Content Token</label>
+            <div className={`text-3xl font-medium tracking-tight mb-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`} style={{ fontFamily: theme.typography.bodyFont }}>{theme.typography.bodyFont}</div>
+            <div className="text-[10px] text-slate-600 font-mono tracking-widest uppercase">Weight: Regular • Subset: UTF-8</div>
           </div>
         </div>
 
-        {/* Aesthetic metadata */}
-        <div className="bg-blue-600/5 border border-blue-500/20 p-6 rounded-2xl relative overflow-hidden group fade-in-up stagger-3">
-           <div className="relative z-10">
-             <h4 className="text-blue-400 font-bold text-sm mb-2 flex items-center space-x-2">
-               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-               </svg>
-               <span>Concept Manifest</span>
+        {/* Logic manifest */}
+        <div className={`border p-8 rounded-3xl relative overflow-hidden group/manifest ${isDarkMode ? 'bg-violet-600/5 border-violet-500/10' : 'bg-violet-500/5 border-violet-500/20'}`}>
+           <div className="absolute inset-0 bg-gradient-to-br from-violet-600/5 to-transparent opacity-0 group-hover/manifest:opacity-100 transition-opacity duration-700"></div>
+           <div className="relative z-10 text-center">
+             <h4 className="text-violet-400 font-black text-[10px] uppercase tracking-[0.4em] mb-4 flex items-center justify-center space-x-3">
+               <span className="w-4 h-[1px] bg-violet-500/50"></span>
+               <span>Inference Results</span>
+               <span className="w-4 h-[1px] bg-violet-500/50"></span>
              </h4>
-             <p className="text-sm text-slate-300 italic leading-relaxed">
-               "Merging the foundational stability of {theme.industry} with the high-energy, narrative-driven aesthetic of {theme.aesthetic}. The result is a bold, future-facing interface designed for engagement."
+             <p className={`text-lg leading-relaxed font-medium ${isDarkMode ? 'text-slate-200' : 'text-slate-700'}`}>
+               "Engineered at the intersection of <span className="text-violet-400 font-bold">{theme.industry}</span> and <span className="text-fuchsia-400 font-bold">{theme.aesthetic}</span> logic. The interface prioritizes high-fidelity visual storytelling."
              </p>
            </div>
-           {/* Decorative flare */}
-           <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-blue-500/10 blur-2xl rounded-full group-hover:scale-150 transition-transform duration-1000"></div>
         </div>
       </div>
     </div>

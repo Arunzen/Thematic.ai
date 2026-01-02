@@ -45,6 +45,7 @@ export interface WebsiteTheme {
 export interface GeneratedThemeState {
   data: WebsiteTheme | null;
   heroImageUrl: string | null;
+  logoUrl: string | null;
   loading: boolean;
   error: string | null;
 }

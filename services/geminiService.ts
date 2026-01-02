@@ -1,36 +1,49 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
 import { WebsiteTheme } from "../types";
+import { getAIClient } from "./secure/vault";
+import { hasCredits, consumeCredit } from "./secure/limiter";
 
-export const generateThemeStructure = async (industry: string, aesthetic: string, businessName: string, subStyle: string, websiteUrl?: string): Promise<WebsiteTheme> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  
-  let prompt = `Generate a comprehensive website theme for a company named "${businessName}" in the "${industry}" industry.
-  
-  VISUAL STYLE OVERRIDE: The entire theme MUST be based on the aesthetic: "${aesthetic}".`;
+export const generateLogo = async (businessName: string, industry: string, aesthetic: string): Promise<string> => {
+  const ai = getAIClient();
+  const response = await ai.models.generateContent({
+    model: 'gemini-2.5-flash-image',
+    contents: {
+      parts: [
+        { text: `A professional, sleek minimalist geometric logo for a company named "${businessName}" in the ${industry} industry. Style: ${aesthetic}. Single abstract symbol, clean lines, high resolution tech branding, isolated on a solid dark background.` }
+      ]
+    },
+    config: {
+      imageConfig: {
+        aspectRatio: "1:1"
+      }
+    }
+  });
 
-  if (subStyle) {
-    prompt += `\nSPECIFIC CHARACTER/SERIES REFERENCE: Integrate the visual language of "${subStyle}" into the design. 
-    Use the color palettes, iconic motifs, and "vibe" associated with ${subStyle}. 
-    If it's an anime, use related art styles (shonen, shojo, etc.). 
-    If it's a specific cartoon like SpongeBob, use nautical yellow/blue colors and bubbly fonts.`;
+  for (const part of response.candidates?.[0]?.content?.parts || []) {
+    if (part.inlineData) {
+      return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+    }
   }
-  
-  prompt += `\n\n- If the aesthetic is "Cartoon" or "Playful", use vivid, high-contrast colors and whimsical icons.
-  - If the aesthetic is "Minimalist", use high whitespace and subtle tones.
-  - The copy and section headings must reflect the chosen vibe.`;
-  
-  if (websiteUrl) {
-    prompt += `\n\nReference Website Analysis: The user has provided "${websiteUrl}" as a reference. 
-    1. Replicate the specific information architecture and page types found on this site. 
-    2. Translate the professional content of "${websiteUrl}" into the tone of "${aesthetic}" and "${subStyle}".
-    3. Ensure the core functional pages are reimagined through this lens.`;
+  throw new Error("Logo generation failed.");
+};
+
+export const generateThemeStructure = async (industry: string, aesthetic: string, businessName: string, subStyle: string, palettePref: string, websiteUrl?: string): Promise<WebsiteTheme> => {
+  if (!hasCredits()) {
+    throw new Error("Neural Capacity Exhausted: Your 4-generation limit has been reached.");
   }
 
-  prompt += `\n\nFinal Requirement:
-  - Colors: Provide valid CSS hex codes. Ensure the palette is cohesive and stunning.
-  - Icons: Use descriptive single-word emojis or short descriptions for the icon field.
-  - Respond ONLY in the requested JSON structure.`;
+  const ai = getAIClient();
+  
+  const prompt = `Generate a comprehensive website theme for "${businessName}" in "${industry}".
+  MAIN VISUAL STYLE: ${aesthetic}.
+  ${palettePref ? `COLOR PALETTE / THEME REFERENCE: ${palettePref}.` : ''}
+  ${subStyle ? `CREATIVE MOTIF: ${subStyle}.` : ''}
+
+  Rules:
+  1. Accessibility: Contrast Ratio min 4.5:1.
+  2. Icons: USE ONLY EMOJIS.
+  3. Aesthetic: Generate premium colors optimized for a sophisticated dark theme.`;
 
   const pageSchema = {
     type: Type.OBJECT,
@@ -56,7 +69,7 @@ export const generateThemeStructure = async (industry: string, aesthetic: string
 
   const response = await ai.models.generateContent({
     model: 'gemini-3-pro-preview',
-    contents: [{ parts: [{ text: prompt }] }],
+    contents: prompt,
     config: {
       responseMimeType: "application/json",
       responseSchema: {
@@ -109,35 +122,21 @@ export const generateThemeStructure = async (industry: string, aesthetic: string
     }
   });
 
-  const text = response.text;
-  if (!text) throw new Error("Thematic.ai engine failed to generate response.");
-  return JSON.parse(text) as WebsiteTheme;
+  const jsonStr = response.text.trim();
+  if (!jsonStr) throw new Error("Inference failure.");
+  
+  consumeCredit();
+  return JSON.parse(jsonStr) as WebsiteTheme;
 };
 
 export const generateHeroImage = async (theme: WebsiteTheme): Promise<string> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  
-  const enrichedPrompt = `
-    High-end web design hero asset.
-    Core Style: ${theme.aesthetic}.
-    Context: Reimagined with motifs from any specific character or show mentioned in the branding.
-    Content: ${theme.imagePrompts.hero}.
-    Technical: 4k, cinematic lighting, ultra-sharp detail, professional composition.
-    If the style is "Cartoon" or inspired by a specific show, make it a high-quality 3D render like Pixar or a modern colorful illustration consistent with that show's art style.
-  `.trim();
+  const ai = getAIClient();
+  const prompt = `Professional web design hero image. Style: ${theme.aesthetic}. Subject: ${theme.imagePrompts.hero}. High quality, cinematic lighting.`.trim();
 
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash-image',
-    contents: {
-      parts: [
-        { text: enrichedPrompt }
-      ]
-    },
-    config: {
-      imageConfig: {
-        aspectRatio: "16:9"
-      }
-    }
+    contents: { parts: [{ text: prompt }] },
+    config: { imageConfig: { aspectRatio: "16:9" } }
   });
 
   for (const part of response.candidates?.[0]?.content?.parts || []) {
@@ -145,6 +144,5 @@ export const generateHeroImage = async (theme: WebsiteTheme): Promise<string> =>
       return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
     }
   }
-
-  throw new Error("Visual generation failed.");
+  throw new Error("Visual synthesis failed.");
 };
