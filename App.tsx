@@ -25,6 +25,73 @@ const App: React.FC = () => {
   const logContainerRef = useRef<HTMLDivElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
 
+  const SHARE_PORTAL_URL = "https://ai.studio/apps/drive/1_oE4yppvkeuGK-cHul_NDpvWJgZ7rACp";
+
+  // Helper to copy text to clipboard with a fallback
+  const copyToClipboard = async (text: string) => {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } else {
+        // Fallback for non-secure contexts or limited browsers
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-9999px";
+        textArea.style.top = "0";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        const successful = document.execCommand('copy');
+        document.body.removeChild(textArea);
+        return successful;
+      }
+    } catch (err) {
+      console.error('Copy failed', err);
+      return false;
+    }
+  };
+
+  // Serialize theme state to URL hash
+  const updateUrlWithTheme = (state: GeneratedThemeState) => {
+    if (!state.data) {
+      window.location.hash = '';
+      return;
+    }
+    try {
+      const payload = {
+        data: state.data,
+        hero: state.heroImageUrl,
+        logo: state.logoUrl
+      };
+      const serialized = btoa(encodeURIComponent(JSON.stringify(payload)));
+      window.location.hash = `theme=${serialized}`;
+    } catch (e) {
+      console.warn("Theme too large to serialize to URL");
+    }
+  };
+
+  // Hydrate from URL on load
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash && hash.startsWith('#theme=')) {
+      try {
+        const serialized = hash.replace('#theme=', '');
+        const decoded = JSON.parse(decodeURIComponent(atob(serialized)));
+        setThemeState({
+          data: decoded.data,
+          heroImageUrl: decoded.hero,
+          logoUrl: decoded.logo,
+          loading: false,
+          error: null
+        });
+      } catch (e) {
+        console.error("Failed to hydrate theme from URL", e);
+      }
+    }
+  }, []);
+
   const steps = [
     "Analyzing brand semantics...",
     "Reimagining visual hierarchy...",
@@ -75,20 +142,22 @@ const App: React.FC = () => {
     setThemeState(prev => ({ ...prev, loading: true, error: null, data: null, heroImageUrl: null, logoUrl: null }));
     
     try {
-      // Step 1: Generate Content Structure
       const structure = await generateThemeStructure(industry, aesthetic, businessName, subStyle, palettePref, websiteUrl);
-      setThemeState(prev => ({ ...prev, data: structure }));
-
-      // Step 2: Generate High Fidelity Hero Image & Logo
+      
       try {
         const [imageUrl, logoUrl] = await Promise.all([
           generateHeroImage(structure),
           generateLogo(structure.businessName, structure.industry, structure.aesthetic)
         ]);
-        setThemeState(prev => ({ ...prev, heroImageUrl: imageUrl, logoUrl: logoUrl, loading: false }));
+        
+        const newState = { data: structure, heroImageUrl: imageUrl, logoUrl: logoUrl, loading: false, error: null };
+        setThemeState(newState);
+        updateUrlWithTheme(newState);
       } catch (assetErr) {
         console.warn("Visual assets synthesis failed partially, proceeding with available data.");
-        setThemeState(prev => ({ ...prev, loading: false }));
+        const newState = { data: structure, heroImageUrl: null, logoUrl: null, loading: false, error: null };
+        setThemeState(newState);
+        updateUrlWithTheme(newState);
       }
       
     } catch (err: any) {
@@ -310,7 +379,7 @@ const App: React.FC = () => {
   return (
     <div className={`min-h-screen bg-transparent transition-colors duration-500 overflow-x-hidden relative ${isDarkMode ? 'selection:bg-violet-500/30 text-slate-200' : 'selection:bg-violet-500/10 text-slate-800'}`}>
       <header className={`px-8 py-6 border-b border-white/5 flex items-center justify-between sticky top-0 z-50 backdrop-blur-3xl transition-all ${isDarkMode ? 'bg-[#0a0505]/60' : 'bg-white/60'}`}>
-        <div className="flex items-center space-x-4 group cursor-pointer" onClick={() => window.location.reload()}>
+        <div className="flex items-center space-x-4 group cursor-pointer" onClick={() => { window.location.hash = ''; window.location.reload(); }}>
           <div className="w-14 h-14 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center shadow-2xl group-hover:border-violet-400 transition-all duration-700 relative overflow-hidden">
             <CustomLogo />
           </div>
@@ -330,17 +399,20 @@ const App: React.FC = () => {
             {isDarkMode ? '☀️' : '🌙'}
           </button>
           <button 
-            onClick={() => {
-              const baseUrl = window.location.origin + window.location.pathname;
-              navigator.clipboard.writeText(baseUrl);
-              setAppCopyFeedback(true);
-              setTimeout(() => setAppCopyFeedback(false), 2000);
+            onClick={async () => {
+              // Combine the requested portal link with any current theme state in the hash
+              const shareUrl = SHARE_PORTAL_URL + window.location.hash;
+              const success = await copyToClipboard(shareUrl);
+              if (success) {
+                setAppCopyFeedback(true);
+                setTimeout(() => setAppCopyFeedback(false), 2000);
+              }
             }}
             className={`px-6 py-3 rounded-2xl border transition-all active:scale-95 flex items-center space-x-2 text-[11px] font-bold uppercase tracking-widest
               ${appCopyFeedback ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 
                 isDarkMode ? 'bg-white/5 border-white/10 text-white hover:bg-white/10' : 'bg-slate-900/5 border-slate-900/10 text-slate-900 hover:bg-slate-900/10'}`}
           >
-            <span>{appCopyFeedback ? 'Copied' : 'Share Portal'}</span>
+            <span>{appCopyFeedback ? 'Link Copied' : 'Share Portal'}</span>
           </button>
         </div>
       </header>
@@ -448,7 +520,7 @@ const App: React.FC = () => {
 
       <footer className={`mt-32 py-24 px-10 border-t transition-all ${isDarkMode ? 'border-white/5 bg-[#0a0505]/80 text-slate-500' : 'border-slate-900/5 bg-white text-slate-400'}`}>
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-16 mb-20">
+          <div className="grid grid-cols-1 md:col-cols-4 gap-16 mb-20">
             <div className="col-span-1 md:col-span-2 space-y-8">
               <div className="flex items-center space-x-5">
                 <div className="w-12 h-12 border border-white/10 rounded-2xl flex items-center justify-center">
